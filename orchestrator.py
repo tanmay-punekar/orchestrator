@@ -1,577 +1,294 @@
-<!DOCTYPE HTML>
-<html>
+# Mathematical functions 
+import math 
+# Fundamental package for scientific computing with Python
+import numpy as np 
+# Additional functions for analysing and manipulating data
+import pandas as pd 
+# Date Functions
+from datetime import date, timedelta, datetime
+# This function adds plotting functions for calender dates
+from pandas.plotting import register_matplotlib_converters
+# Important package for visualization - we use this to plot the market data
+import matplotlib.pyplot as plt 
+# Formatting dates
+import matplotlib.dates as mdates
+# Packages for measuring model performance / errors
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+# Deep learning library, used for neural networks
+from keras.models import Sequential 
+# Deep learning classes for recurrent and regular densely-connected layers
+from keras.layers import LSTM, Dense, Dropout
+# EarlyStopping during model training
+from keras.callbacks import EarlyStopping
+from keras.layers.recurrent import SimpleRNN
 
-<head>
-    <meta charset="utf-8">
+#DATA CONCATENATION
 
-    <title>Jupyter Notebook</title>
-    <link id="favicon" rel="shortcut icon" type="image/x-icon" href="/static/base/images/favicon-notebook.ico?v=9e5fb7f8501d94094806320e718be6b3">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="/static/components/jquery-ui/themes/smoothness/jquery-ui.min.css?v=3c2a865c832a1322285c55c6ed99abb2" type="text/css" />
-    <link rel="stylesheet" href="/static/components/jquery-typeahead/dist/jquery.typeahead.min.css?v=9df10041c3e07da766e7c48dd4c35e4a" type="text/css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+df1 = pd.read_csv(r"C:\Users\Tanmay\Desktop\Case_Study_1\FBcomments.csv",encoding = "ISO-8859-1")
+df1["Date"] = pd.to_datetime(df1["Date"])
+df1['Comment'] = df1['Comment'].astype(str)
+
+df2 = pd.read_csv(r"C:\Users\Tanmay\Desktop\Case_Study_1\Insta1.csv",encoding = "ISO-8859-1")
+df2["Date"] = pd.to_datetime(df2["Date"])
+df2['Comment'] = df2['Comment'].astype(str)
+
+df3 = pd.read_csv(r"C:\Users\Tanmay\Desktop\Case_Study_1\Youtube1.csv",encoding = "ISO-8859-1")
+df3["Date"] = pd.to_datetime(df3["Date"])
+df3['Comment'] = df3['Comment'].astype(str)
+
+from pymongo import MongoClient
+import pandas as pd
+
+client = MongoClient('localhost', 27017)  # Remember your uri string
+col = client['casestudy']['twitter2'].find()
+
+df4 = pd.DataFrame(col) 
+df4 = df4.rename(columns={"timestamp": "Date"})
+df4 = df4.rename(columns={"text": "Comment"})
+df5 = df4[['Date','Comment']]
+df5["Date"] = pd.to_datetime(df5["Date"])
+df5['Comment'] = df5['Comment'].astype(str)
+df5['Date'] = df5['Date'].dt.date
+
+odds = pd.read_csv(r"C:\Users\Tanmay\Desktop\Case Study 2\Datasets\odds.csv",encoding = "ISO-8859-1")
+manu = manu.merge(odds,how='left', on='Date').fillna('0')
+
+manu = manu.assign(t1=manu.close.shift(-1)).fillna({'t1': manu.close})
+
+
+
+#SENTIMENT ANALYSER
+
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+sid = SentimentIntensityAnalyzer()
+data['Negative'] = data['Comment'].apply(lambda x: sid.polarity_scores(x)['neg'])
+data['Positive'] = data['Comment'].apply(lambda x: sid.polarity_scores(x)['pos'])
+data['Neutral'] = data['Comment'].apply(lambda x: sid.polarity_scores(x)['neu'])
+data['Sentiment'] = data['Comment'].apply(lambda x: sid.polarity_scores(x)['compound'])
+
+#TOPIC MODELLER
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+cv = TfidfVectorizer(max_df = 0.9,min_df = 2,stop_words = 'english')
+dtm = cv.fit_transform(data['Comment'].astype(str))
+from sklearn.decomposition import NMF
+NMF = NMF(n_components=4,random_state=55)
+NMF.fit(dtm)
+topic_results = LDA.transform(dtm)
+df2 = pd.DataFrame(data=topic_results)
+data['Topic1'] = df2[0]
+data['Topic2'] = df2[1]
+data['Topic3'] = df2[2]
+data['Topic4'] = df2[3]
+
+#CALCULATION OF FINANCIAL INDICATORS
+
+from finta import TA
+manu_df['RSI'] = TA.RSI(manu_df)
+manu_df['MFI'] = TA.MFI(manu_df)
+manu_df['EMA'] = TA.EMA(manu_df)
+manu_df['STOCHK'] = TA.STOCH(manu_df)
+manu_df['MACD']= TA.MACD(manu_df)
+
+#FEATURE SCALER
+
+from sklearn.preprocessing import MinMaxScaler
+Scaling = MinMaxScaler()
+manu[['EMA','MFI','RSI','Positive','Negative','Neutral','Topic1','Topic2','Topic3','Topic4','League','Result','ManBO','OppBO','DrawBO']] = Scaling.fit_transform(manu[['EMA','MFI','RSI','Positive','Negative','Neutral','Topic1','Topic2','Topic3','Topic4','League','Result','ManBO','OppBO','DrawBO']])
+
+#MACHINE LEARNING
+fi = ['EMA','MFI','RSI']
+si = ['Positive','Negative','Neutral']
+ti = ['Topic1','Topic2','Topic3','Topic4']
+ei = ['League','Result','ManBO','OppBO','DrawBO']
+X = manu.loc[:,fi]
+y = manu.iloc[:, -1].values
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 5)
+
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+y_pred1 = regressor.predict(X_test)
+
+from sklearn.ensemble import RandomForestRegressor
+regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+regressor.fit(X, y)
+y_pred2 = regressor.predict(X_test)
+
+from sklearn.svm import SVR
+SVR = SVR()
+SVR.fit(X,y)
+y_pred3 = SVR.predict(X_test)
+
+from sklearn.metrics import mean_absolute_error
+print(mean_absolute_error(y_test, y_pred1))
+print(mean_absolute_error(y_test, y_pred2))
+print(mean_absolute_error(y_test, y_pred3))
+
+from sklearn.metrics import mean_squared_error
+print(mean_squared_error(y_test, y_pred1))
+print(mean_squared_error(y_test, y_pred2))
+print(mean_squared_error(y_test, y_pred3))
+
+#DEEPLEARNING
+
+train_dfs = manu
+train_df = train_dfs.sort_values(by=['Date']).copy()
+date_index = train_df.index
+
+d = pd.to_datetime(train_df.index)
+train_df['Month'] = d.strftime("%m") 
+train_df['Year'] = d.strftime("%Y") 
+
+# We reset the index, so we can convert the date-index to a number-index
+train_df = train_df.reset_index(drop=True).copy()
+
+
+# Create the dataset with features and filter the data to the list of FEATURES
+data = pd.DataFrame(train_df)
+data_filtered = data[fi+si+ti]
+
+# We add a prediction column and set dummy values to prepare the data for scaling
+data_filtered_ext = data_filtered.copy()
+data_filtered_ext['Prediction'] = train_df['t1'] 
+
+nrows = data_filtered.shape[0]
+np_data_unscaled = np.array(data_filtered)
+np_data_unscaled = np.reshape(np_data_unscaled, (nrows, -1))
+print(np_data_unscaled.shape)
+
+# Transform the data by scaling each feature to a range between 0 and 1
+
+# Creating a separate scaler that works on a single column for scaling predictions
+np_data = np_data_unscaled
+df_Close = pd.DataFrame(train_df['t1'])
+np_Close_scaled = df_Close
+
+#RNN
+
+sequence_length = 100
+
+# Split the training data into x_train and y_train data sets
+# Get the number of rows to train the model on 70% of the data 
+train_data_len = math.ceil(np_data.shape[0] * 0.7) 
+
+# Create the training data
+train_data = np_data[0:train_data_len, :]
+x_train, y_train = [], []
+# The RNN needs data with the format of [samples, time steps, features].
+# Here, we create N samples, 100 time steps per sample, and 2 features
+for i in range(100, train_data_len):
+    x_train.append(train_data[i-sequence_length:i,:]) #contains 100 values 0-100 * columsn
+    y_train.append(train_data[i, 0]) #contains the prediction values for validation
     
+# Convert the x_train and y_train to numpy arrays
+x_train, y_train = np.array(x_train), np.array(y_train)
+
+# Create the test data
+test_data = np_data[train_data_len - sequence_length:, :]
+
+# Split the test data into x_test and y_test
+x_test, y_test = [], []
+test_data_len = test_data.shape[0]
+for i in range(sequence_length, test_data_len):
+    x_test.append(test_data[i-sequence_length:i,:]) #contains 100 values 0-100 * columsn
+    y_test.append(test_data[i, 0]) #contains the prediction values for validation
+# Convert the x_train and y_train to numpy arrays
+x_test, y_test = np.array(x_test), np.array(y_test)
+
+# Convert the x_train and y_train to numpy arrays
+x_test = np.array(x_test); y_test = np.array(y_test)
     
+print(x_train.shape, y_train.shape)
+print(x_test.shape, y_test.shape)
+
+model = Sequential()
+
+# Model with 100 Neurons 
+# inputshape = 100 Timestamps, each with x_train.shape[2] variables
+n_neurons = x_train.shape[1] * x_train.shape[2]
+print(n_neurons, x_train.shape[1], x_train.shape[2])
+model.add(SimpleRNN(n_neurons, return_sequences=False, 
+               input_shape=(x_train.shape[1], x_train.shape[2]))) 
+model.add(Dense(1, activation='relu'))
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+epochs = 5
+early_stop = EarlyStopping(monitor='loss', patience=2, verbose=1)
+history = model.fit(x_train, y_train, batch_size=16, 
+                    epochs=epochs, callbacks=[early_stop])
+
+predictions = model.predict(x_test)
+from sklearn.metrics import mean_absolute_error
+print(mean_absolute_error(y_test, predictions))
+from sklearn.metrics import mean_squared_error
+print(mean_squared_error(y_test, predictions))
 
 
-<script type="text/javascript" src="/static/components/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML-full,Safe&delayStartupUntil=configured" charset="utf-8"></script>
-
-<script type="text/javascript">
-// MathJax disabled, set as null to distinguish from *missing* MathJax,
-// where it will be undefined, and should prompt a dialog later.
-window.mathjax_url = "/static/components/MathJax/MathJax.js";
-</script>
-
-<link rel="stylesheet" href="/static/components/bootstrap-tour/build/css/bootstrap-tour.min.css?v=d0b3c2fce6056a2ddd5a4513762a94c4" type="text/css" />
-<link rel="stylesheet" href="/static/components/codemirror/lib/codemirror.css?v=fc217d502b05f65616356459c0ec1d62">
 
 
-    <link rel="stylesheet" href="/static/style/style.min.css?v=2165fc0d023f0baf5cce3b2a6db40e22" type="text/css"/>
+#LSTM
+sequence_length = 100
+
+# Split the training data into x_train and y_train data sets
+# Get the number of rows to train the model on 70% of the data 
+train_data_len = math.ceil(np_data.shape[0] * 0.7) 
+
+# Create the training data
+train_data = np_data[0:train_data_len, :]
+x_train, y_train = [], []
+# The RNN needs data with the format of [samples, time steps, features].
+# Here, we create N samples, 100 time steps per sample, and 2 features
+for i in range(100, train_data_len):
+    x_train.append(train_data[i-sequence_length:i,:]) #contains 100 values 0-100 * columsn
+    y_train.append(train_data[i, 0]) #contains the prediction values for validation
     
+# Convert the x_train and y_train to numpy arrays
+x_train, y_train = np.array(x_train), np.array(y_train)
 
-<link rel="stylesheet" href="/static/notebook/css/override.css?v=e6f18013b8771987812e992b38ec3318" type="text/css" />
-<link rel="stylesheet" href=""  id='kernel-css'                             type="text/css" />
+# Create the test data
+test_data = np_data[train_data_len - sequence_length:, :]
 
+# Split the test data into x_test and y_test
+x_test, y_test = [], []
+test_data_len = test_data.shape[0]
+for i in range(sequence_length, test_data_len):
+    x_test.append(test_data[i-sequence_length:i,:]) #contains 100 values 0-100 * columsn
+    y_test.append(test_data[i, 0]) #contains the prediction values for validation
+# Convert the x_train and y_train to numpy arrays
+x_test, y_test = np.array(x_test), np.array(y_test)
 
-    <link rel="stylesheet" href="/custom/custom.css" type="text/css" />
-    <script src="/static/components/es6-promise/promise.min.js?v=f004a16cb856e0ff11781d01ec5ca8fe" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/components/react/react.production.min.js?v=34f96ffc962a7deecc83037ccb582b58" type="text/javascript"></script>
-    <script src="/static/components/react/react-dom.production.min.js?v=b14d91fb641317cda38dbc9dbf985ab4" type="text/javascript"></script>
-    <script src="/static/components/create-react-class/index.js?v=94feb9971ce6d26211729abc43f96cd2" type="text/javascript"></script>
-    <script src="/static/components/requirejs/require.js?v=951f856e81496aaeec2e71a1c2c0d51f" type="text/javascript" charset="utf-8"></script>
-    <script>
-      require.config({
-          
-          urlArgs: "v=20200915165009",
-          
-          baseUrl: '/static/',
-          paths: {
-            'auth/js/main': 'auth/js/main.min',
-            custom : '/custom',
-            nbextensions : '/nbextensions',
-            kernelspecs : '/kernelspecs',
-            underscore : 'components/underscore/underscore-min',
-            backbone : 'components/backbone/backbone-min',
-            jed: 'components/jed/jed',
-            jquery: 'components/jquery/jquery.min',
-            json: 'components/requirejs-plugins/src/json',
-            text: 'components/requirejs-text/text',
-            bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
-            bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            'jquery-ui': 'components/jquery-ui/jquery-ui.min',
-            moment: 'components/moment/min/moment-with-locales',
-            codemirror: 'components/codemirror',
-            termjs: 'components/xterm.js/xterm',
-            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead.min',
-          },
-          map: { // for backward compatibility
-              "*": {
-                  "jqueryui": "jquery-ui",
-              }
-          },
-          shim: {
-            typeahead: {
-              deps: ["jquery"],
-              exports: "typeahead"
-            },
-            underscore: {
-              exports: '_'
-            },
-            backbone: {
-              deps: ["underscore", "jquery"],
-              exports: "Backbone"
-            },
-            bootstrap: {
-              deps: ["jquery"],
-              exports: "bootstrap"
-            },
-            bootstraptour: {
-              deps: ["bootstrap"],
-              exports: "Tour"
-            },
-            "jquery-ui": {
-              deps: ["jquery"],
-              exports: "$"
-            }
-          },
-          waitSeconds: 30,
-      });
-
-      require.config({
-          map: {
-              '*':{
-                'contents': 'services/contents',
-              }
-          }
-      });
-
-      // error-catching custom.js shim.
-      define("custom", function (require, exports, module) {
-          try {
-              var custom = require('custom/custom');
-              console.debug('loaded custom.js');
-              return custom;
-          } catch (e) {
-              console.error("error loading custom.js", e);
-              return {};
-          }
-      })
-
-    document.nbjs_translations = {"domain": "nbjs", "locale_data": {"nbjs": {"": {"domain": "nbjs"}}}};
-    document.documentElement.lang = navigator.language.toLowerCase();
-    </script>
-
+# Convert the x_train and y_train to numpy arrays
+x_test = np.array(x_test); y_test = np.array(y_test)
     
-    
+print(x_train.shape, y_train.shape)
+print(x_test.shape, y_test.shape)
 
-</head>
+model = Sequential()
 
-<body class="notebook_app "
- 
+# Model with 100 Neurons 
+# inputshape = 100 Timestamps, each with x_train.shape[2] variables
+n_neurons = x_train.shape[1] * x_train.shape[2]
+print(n_neurons, x_train.shape[1], x_train.shape[2])
+model.add(LSTM(n_neurons, return_sequences=False, 
+               input_shape=(x_train.shape[1], x_train.shape[2]))) 
+model.add(Dense(1, activation='relu'))
 
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
 
-  
-    data-jupyter-api-token="1a940ab387c3b8a7fc3f82f7bdf7b8c59bb414f97263a395"
-  
- 
-data-base-url="/"
-data-ws-url=""
-data-notebook-name="ORCHESTRATOR.ipynb"
-data-notebook-path="Anaconda4/ORCHESTRATOR.ipynb"
+epochs = 5
+early_stop = EarlyStopping(monitor='loss', patience=2, verbose=1)
+history = model.fit(x_train, y_train, batch_size=16, 
+                    epochs=epochs, callbacks=[early_stop])
 
-dir="ltr">
-
-<noscript>
-    <div id='noscript'>
-      Jupyter Notebook requires JavaScript.<br>
-      Please enable it to proceed. 
-  </div>
-</noscript>
-
-<div id="header" role="navigation" aria-label="Top Menu">
-  <div id="header-container" class="container">
-  <div id="ipython_notebook" class="nav navbar-brand"><a href="/tree?token=1a940ab387c3b8a7fc3f82f7bdf7b8c59bb414f97263a395" title='dashboard'>
-      <img src='/static/base/images/logo.png?v=641991992878ee24c6f3826e81054a0f' alt='Jupyter Notebook'/>
-  </a></div>
-
-  
-
-
-<span id="save_widget" class="save_widget">
-    <span id="notebook_name" class="filename"></span>
-    <span class="checkpoint_status"></span>
-    <span class="autosave_status"></span>
-</span>
-
-
-  
-
-<span id="kernel_logo_widget">
-  
-  <img class="current_kernel_logo" alt="Current Kernel Logo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"/>
-  
-</span>
-
-
-  
-  
-  
-  
-
-    <span id="login_widget">
-      
-        <button id="logout" class="btn btn-sm navbar-btn">Logout</button>
-      
-    </span>
-
-  
-
-  
-  
-  </div>
-  <div class="header-bar"></div>
-
-  
-<div id="menubar-container" class="container">
-<div id="menubar">
-    <div id="menus" class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <button type="button" class="btn btn-default navbar-btn navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <i class="fa fa-bars"></i>
-              <span class="navbar-text">Menu</span>
-            </button>
-            <p id="kernel_indicator" class="navbar-text indicator_area">
-              <span class="kernel_indicator_name">Kernel</span>
-              <i id="kernel_indicator_icon"></i>
-            </p>
-            <i id="readonly-indicator" class="navbar-text" title='This notebook is read-only'>
-                <span class="fa-stack">
-                    <i class="fa fa-save fa-stack-1x"></i>
-                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
-                </span>
-            </i>
-            <i id="modal_indicator" class="navbar-text"></i>
-            <span id="notification_area"></span>
-            <div class="navbar-collapse collapse">
-              <ul class="nav navbar-nav">
-                <li class="dropdown"><a href="#" id="filelink" aria-haspopup="true" aria-controls="file_menu class="dropdown-toggle" data-toggle="dropdown">File</a>
-                    <ul id="file_menu" class="dropdown-menu" role="menu" aria-labelledby="filelink">
-                        <li id="new_notebook" class="dropdown-submenu" role="none">
-                            <a href="#" role="menuitem">New Notebook<span class="sr-only">Toggle Dropdown</span></a>
-                            <ul class="dropdown-menu" id="menu-new-notebook-submenu"></ul>
-                        </li>
-                        <li id="open_notebook" role="none"
-                            title="Opens a new window with the Dashboard view">
-                            <a href="#" role="menuitem">Open...</a></li>
-                        <!-- <hr/> -->
-                        <li class="divider" role="none"></li>
-                        <li id="copy_notebook" role="none"
-                            title="Open a copy of this notebook's contents and start a new kernel">
-                            <a href="#" role="menuitem">Make a Copy...</a></li>
-                        <li id="save_notebook_as" role="none"
-                            title="Save a copy of the notebook's contents and start a new kernel">
-                            <a href="#" role="menuitem">Save as...</a></li>
-                        <li id="rename_notebook" role="none"><a href="#" role="menuitem">Rename...</a></li>
-                        <li id="save_checkpoint" role="none"><a href="#" role="menuitem">Save and Checkpoint</a></li>
-                        <!-- <hr/> -->
-                        <li class="divider" role="none"></li>
-                        <li id="restore_checkpoint" class="dropdown-submenu" role="none"><a href="#" role="menuitem">Revert to Checkpoint<span class="sr-only">Toggle Dropdown</span></a>
-                          <ul class="dropdown-menu">
-                            <li><a href="#"></a></li>
-                            <li><a href="#"></a></li>
-                            <li><a href="#"></a></li>
-                            <li><a href="#"></a></li>
-                            <li><a href="#"></a></li>
-                          </ul>
-                        </li>
-                        <li class="divider" role="none"></li>
-                        <li id="print_preview" role="none"><a href="#" role="menuitem">Print Preview</a></li>
-                        <li class="dropdown-submenu" role="none"><a href="#" role="menuitem">Download as<span class="sr-only">Toggle Dropdown</span></a>
-                            <ul id="download_menu" class="dropdown-menu">
-                                
-                                <li id="download_asciidoc">
-                                    <a href="#">AsciiDoc (.asciidoc)</a>
-                                </li>
-                                
-                                <li id="download_html">
-                                    <a href="#">HTML (.html)</a>
-                                </li>
-                                
-                                <li id="download_latex">
-                                    <a href="#">LaTeX (.tex)</a>
-                                </li>
-                                
-                                <li id="download_markdown">
-                                    <a href="#">Markdown (.md)</a>
-                                </li>
-                                
-                                <li id="download_notebook">
-                                    <a href="#">Notebook (.ipynb)</a>
-                                </li>
-                                
-                                <li id="download_pdf">
-                                    <a href="#">PDF via LaTeX (.pdf)</a>
-                                </li>
-                                
-                                <li id="download_rst">
-                                    <a href="#">reST (.rst)</a>
-                                </li>
-                                
-                                <li id="download_script">
-                                    <a href="#">Script (.txt)</a>
-                                </li>
-                                
-                                <li id="download_slides">
-                                    <a href="#">Reveal.js slides (.slides.html)</a>
-                                </li>
-                                
-                            </ul>
-                        </li>
-                        <li class="dropdown-submenu hidden" role="none"><a href="#" role="menuitem">Deploy as</a>
-                            <ul id="deploy_menu" class="dropdown-menu"></ul>
-                        </li>
-                        <li class="divider" role="none"></li>
-                        <li id="trust_notebook" role="none"
-                            title="Trust the output of this notebook">
-                            <a href="#" role="menuitem">Trust Notebook</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="close_and_halt" role="none"
-                            title="Shutdown this notebook's kernel, and close this window">
-                            <a href="#" role="menuitem">Close and Halt</a></li>
-                    </ul>
-                </li>
-
-                <li class="dropdown"><a href="#" class="dropdown-toggle" id="editlink" data-toggle="dropdown" aria-haspopup="true" aria-controls="edit_menu">Edit</a>
-                    <ul id="edit_menu" class="dropdown-menu" role="menu" aria-labelledby="editlink">
-                        <li id="cut_cell" role="none"><a href="#" role="menuitem">Cut Cells</a></li>
-                        <li id="copy_cell" role="none"><a href="#" role="menuitem">Copy Cells</a></li>
-                        <li id="paste_cell_above" class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">Paste Cells Above</a></li>
-                        <li id="paste_cell_below" class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">Paste Cells Below</a></li>
-                        <li id="paste_cell_replace" class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">Paste Cells &amp; Replace</a></li>
-                        <li id="delete_cell" role="none"><a href="#" role="menuitem">Delete Cells</a></li>
-                        <li id="undelete_cell" class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">Undo Delete Cells</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="split_cell" role="none"><a href="#" role="menuitem">Split Cell</a></li>
-                        <li id="merge_cell_above" role="none"><a href="#" role="menuitem">Merge Cell Above</a></li>
-                        <li id="merge_cell_below" role="none"><a href="#" role="menuitem">Merge Cell Below</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="move_cell_up" role="none"><a href="#" role="menuitem">Move Cell Up</a></li>
-                        <li id="move_cell_down" role="none"><a href="#" role="menuitem">Move Cell Down</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="edit_nb_metadata" role="none"><a href="#" role="menuitem">Edit Notebook Metadata</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="find_and_replace" role="none"><a href="#" role="menuitem"> Find and Replace </a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="cut_cell_attachments" role="none"><a href="#" role="menuitem">Cut Cell Attachments</a></li>
-                        <li id="copy_cell_attachments" role="none"><a href="#" role="menuitem">Copy Cell Attachments</a></li>
-                        <li id="paste_cell_attachments"  class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">Paste Cell Attachments</a></li>
-                        <li class="divider" role="none"></li>
-                        <li id="insert_image" class="disabled" role="none"><a href="#" role="menuitem" aria-disabled="true">  Insert Image </a></li>
-                    </ul>
-                </li>
-                <li class="dropdown"><a href="#" class="dropdown-toggle" id="viewlink" data-toggle="dropdown" aria-haspopup="true" aria-controls="view_menu">View</a>
-                    <ul id="view_menu" class="dropdown-menu" role="menu" aria-labelledby="viewlink">
-                        <li id="toggle_header" role="none"
-                            title="Show/Hide the logo and notebook title (above menu bar)">
-                            <a href="#" role="menuitem">Toggle Header</a>
-                        </li>
-                        <li id="toggle_toolbar" role="none"
-                            title="Show/Hide the action icons (below menu bar)">
-                            <a href="#" role="menuitem">Toggle Toolbar</a>
-                        </li>
-                        <li id="toggle_line_numbers" role="none"
-                            title="Show/Hide line numbers in cells">
-                            <a href="#" role="menuitem">Toggle Line Numbers</a>
-                        </li>
-                        <li id="menu-cell-toolbar" class="dropdown-submenu" role="none">
-                            <a href="#" role="menuitem">Cell Toolbar</a>
-                            <ul class="dropdown-menu" id="menu-cell-toolbar-submenu"></ul>
-                        </li>
-                    </ul>
-                </li>
-                <li class="dropdown"><a href="#" class="dropdown-toggle" id="insertlink" data-toggle="dropdown" aria-haspopup="true" aria-controls="insert_menu">Insert</a>
-                    <ul id="insert_menu" class="dropdown-menu" role="menu" aria-labelledby="insertlink">
-                        <li id="insert_cell_above" role="none"
-                            title="Insert an empty Code cell above the currently active cell">
-                            <a href="#" role="menuitem">Insert Cell Above</a></li>
-                        <li id="insert_cell_below" role="none"
-                            title="Insert an empty Code cell below the currently active cell">
-                            <a href="#" role="menuitem">Insert Cell Below</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Cell</a>
-                    <ul id="cell_menu" class="dropdown-menu">
-                        <li id="run_cell" title="Run this cell, and move cursor to the next one">
-                            <a href="#">Run Cells</a></li>
-                        <li id="run_cell_select_below" title="Run this cell, select below">
-                            <a href="#">Run Cells and Select Below</a></li>
-                        <li id="run_cell_insert_below" title="Run this cell, insert below">
-                            <a href="#">Run Cells and Insert Below</a></li>
-                        <li id="run_all_cells" title="Run all cells in the notebook">
-                            <a href="#">Run All</a></li>
-                        <li id="run_all_cells_above" title="Run all cells above (but not including) this cell">
-                            <a href="#">Run All Above</a></li>
-                        <li id="run_all_cells_below" title="Run this cell and all cells below it">
-                            <a href="#">Run All Below</a></li>
-                        <li class="divider"></li>
-                        <li id="change_cell_type" class="dropdown-submenu"
-                            title="All cells in the notebook have a cell type. By default, new cells are created as 'Code' cells">
-                            <a href="#">Cell Type</a>
-                            <ul class="dropdown-menu">
-                              <li id="to_code"
-                                  title="Contents will be sent to the kernel for execution, and output will display in the footer of cell">
-                                  <a href="#">Code</a></li>
-                              <li id="to_markdown"
-                                  title="Contents will be rendered as HTML and serve as explanatory text">
-                                  <a href="#">Markdown</a></li>
-                              <li id="to_raw"
-                                  title="Contents will pass through nbconvert unmodified">
-                                  <a href="#">Raw NBConvert</a></li>
-                            </ul>
-                        </li>
-                        <li class="divider"></li>
-                        <li id="current_outputs" class="dropdown-submenu"><a href="#">Current Outputs</a>
-                            <ul class="dropdown-menu">
-                                <li id="toggle_current_output"
-                                    title="Hide/Show the output of the current cell">
-                                    <a href="#">Toggle</a>
-                                </li>
-                                <li id="toggle_current_output_scroll"
-                                    title="Scroll the output of the current cell">
-                                    <a href="#">Toggle Scrolling</a>
-                                </li>
-                                <li id="clear_current_output"
-                                    title="Clear the output of the current cell">
-                                    <a href="#">Clear</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li id="all_outputs" class="dropdown-submenu"><a href="#">All Output</a>
-                            <ul class="dropdown-menu">
-                                <li id="toggle_all_output"
-                                    title="Hide/Show the output of all cells">
-                                    <a href="#">Toggle</a>
-                                </li>
-                                <li id="toggle_all_output_scroll"
-                                    title="Scroll the output of all cells">
-                                    <a href="#">Toggle Scrolling</a>
-                                </li>
-                                <li id="clear_all_output"
-                                    title="Clear the output of all cells">
-                                    <a href="#">Clear</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" id="kernellink">Kernel</a>
-                    <ul id="kernel_menu" class="dropdown-menu" aria-labelledby="kernellink">
-                        <li id="int_kernel"
-                            title="Send Keyboard Interrupt (CTRL-C) to the Kernel">
-                            <a href="#">Interrupt</a>
-                        </li>
-                        <li id="restart_kernel"
-                            title="Restart the Kernel">
-                            <a href="#">Restart</a>
-                        </li>
-                        <li id="restart_clear_output"
-                            title="Restart the Kernel and clear all output">
-                            <a href="#">Restart &amp; Clear Output</a>
-                        </li>
-                        <li id="restart_run_all"
-                            title="Restart the Kernel and re-run the notebook">
-                            <a href="#">Restart &amp; Run All</a>
-                        </li>
-                        <li id="reconnect_kernel"
-                            title="Reconnect to the Kernel">
-                            <a href="#">Reconnect</a>
-                        </li>
-                        <li id="shutdown_kernel"
-                            title="Shutdown the Kernel">
-                            <a href="#">Shutdown</a>
-                        </li>
-                        <li class="divider"></li>
-                        <li id="menu-change-kernel" class="dropdown-submenu">
-                            <a href="#">Change kernel</a>
-                            <ul class="dropdown-menu" id="menu-change-kernel-submenu"></ul>
-                        </li>
-                    </ul>
-                </li>
-                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Help</a>
-                    <ul  id="help_menu" class="dropdown-menu">
-                        
-                        <li id="notebook_tour" title="A quick tour of the notebook user interface"><a href="#">User Interface Tour</a></li>
-                        <li id="keyboard_shortcuts" title="Opens a tooltip with all keyboard shortcuts"><a href="#">Keyboard Shortcuts</a></li>
-                        <li id="edit_keyboard_shortcuts" title="Opens a dialog allowing you to edit Keyboard shortcuts"><a href="#">Edit Keyboard Shortcuts</a></li>
-                        <li class="divider"></li>
-                        
-
-						
-                        
-                            
-                                <li><a rel="noreferrer" href="http://nbviewer.jupyter.org/github/ipython/ipython/blob/3.x/examples/Notebook/Index.ipynb" target="_blank" title="Opens in a new window">
-                                
-                                    <i class="fa fa-external-link menu-icon pull-right"></i>
-                                
-
-                                Notebook Help
-                                </a></li>
-                            
-                                <li><a rel="noreferrer" href="https://help.github.com/articles/markdown-basics/" target="_blank" title="Opens in a new window">
-                                
-                                    <i class="fa fa-external-link menu-icon pull-right"></i>
-                                
-
-                                Markdown
-                                </a></li>
-                            
-                            
-                        
-                        <li class="divider"></li>
-                        <li title="About Jupyter Notebook"><a id="notebook_about" href="#">About</a></li>
-                        
-                    </ul>
-                </li>
-              </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="maintoolbar" class="navbar">
-  <div class="toolbar-inner navbar-inner navbar-nobg">
-    <div id="maintoolbar-container" class="container"></div>
-  </div>
-</div>
-</div>
-
-<div class="lower-header-bar"></div>
-
-</div>
-
-<div id="site">
-
-
-<div id="ipython-main-app">
-    <div id="notebook_panel">
-        <div id="notebook"></div>
-        <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
-    </div>
-</div>
-
-
-
-</div>
-
-
-
-<div id="pager">
-    <div id="pager-contents">
-        <div id="pager-container" class="container"></div>
-    </div>
-    <div id='pager-button-area'></div>
-</div>
-
-
-
-
-
-
-<script type="text/javascript">
-    sys_info = {"notebook_version": "6.0.3", "notebook_path": "C:\\Users\\Tanmay\\Anaconda4\\lib\\site-packages\\notebook", "commit_source": "", "commit_hash": "", "sys_version": "3.7.6 (default, Jan  8 2020, 20:23:39) [MSC v.1916 64 bit (AMD64)]", "sys_executable": "C:\\Users\\Tanmay\\Anaconda4\\python.exe", "sys_platform": "win32", "platform": "Windows-10-10.0.18362-SP0", "os_name": "nt", "default_encoding": "utf-8"};
-</script>
-
-<script src="/static/components/text-encoding/lib/encoding.js?v=d5bb0fc9ffeff7d98a69bb83daa51052" charset="utf-8"></script>
-
-<script src="/static/notebook/js/main.min.js?v=fd76f62c63dfcfdb33c73b0d15290316" type="text/javascript" charset="utf-8"></script>
-
-
-
-<script type='text/javascript'>
-  function _remove_token_from_url() {
-    if (window.location.search.length <= 1) {
-      return;
-    }
-    var search_parameters = window.location.search.slice(1).split('&');
-    for (var i = 0; i < search_parameters.length; i++) {
-      if (search_parameters[i].split('=')[0] === 'token') {
-        // remote token from search parameters
-        search_parameters.splice(i, 1);
-        var new_search = '';
-        if (search_parameters.length) {
-          new_search = '?' + search_parameters.join('&');
-        }
-        var new_url = window.location.origin + 
-                      window.location.pathname + 
-                      new_search + 
-                      window.location.hash;
-        window.history.replaceState({}, "", new_url);
-        return;
-      }
-    }
-  }
-  _remove_token_from_url();
-</script>
-</body>
-
-</html>
+predictions = model.predict(x_test)
+from sklearn.metrics import mean_absolute_error
+print(mean_absolute_error(y_test, predictions))
+from sklearn.metrics import mean_squared_error
+print(mean_squared_error(y_test, predictions))
